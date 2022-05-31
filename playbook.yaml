@@ -1,0 +1,30 @@
+---
+- name: Set-up Domain Controllers
+  hosts: domain_controllers
+  vars_files:
+    - vars/external_vars.yaml
+
+  tasks:
+  - name: Install DNS Role
+    win_feature:
+      name:
+        - DNS
+        - RSAT-DNS-Server
+      state: present
+
+  - name: Ensure primary zone is present
+    community.windows.win_dns_zone:
+      name: boxboat.corp
+      replication: none
+      type: primary
+      state: present
+
+  - name: Add conditional forwarders for Azure
+    community.windows.win_dns_zone:
+      name: "{{ item }}"
+      replication: none
+      type: forwarder
+      state: present
+      dns_servers: 
+      - 168.63.129.16
+    loop: "{{ azure_public_dns_zones }}"

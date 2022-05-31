@@ -1,0 +1,7 @@
+[domain_controllers]
+vm-workshop ansible_host=<your ip here>
+
+[domain_controllers:vars]
+ansible_connection=winrm
+ansible_winrm_server_cert_validation=ignore
+ansible_winrm_transport=ntlm
