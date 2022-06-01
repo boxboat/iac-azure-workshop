@@ -2,6 +2,8 @@ data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
 
+data "github_ip_ranges" "github_runners" {}
+
 resource "azurerm_resource_group" "resource_group" {
   name     = "rg-workshop-001"
   location = "eastus"
@@ -36,6 +38,21 @@ resource "azurerm_network_security_group" "nsg" {
     destination_port_range     = "5586"
     source_address_prefix      = "${chomp(data.http.myip.body)}/32"
     destination_address_prefix = "*"
+  }
+
+  dynamic "security_rule" {
+    for_each = data.github_ip_ranges.github_runners.actions_ipv4
+    content {
+      name                       = "WinRM"
+      priority                   = 100
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "5586"
+      source_address_prefix      = "${chomp(security_rule.value)}/32"
+      destination_address_prefix = "*"
+    }
   }
 }
 
